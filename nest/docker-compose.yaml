@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  nestjs:
+    container_name: nestjs-container
+    image: ghcr.io/company/nestjs:latest
+    ports:
+      - '5006:5000'
+    environment:
+      - NODE_ENV=production
+      - DB_URI=mongodb+srv://todo:prithila23@cluster0.xnn0u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - SERVER_URL=https://api.safeler.com
+      - CLIENT_URL=http://localhost:3000
+      - JWT_SECRET=0oxDkrFptOvTDEPV8d31BDO9Jjs1gAGIcoTHasanz0O7Fw8d3cg2goyfeZrXPJtjL7eoc9Ht3WzOmWGVJtSzgQtlEUhITOAan2VfslqGS0a3eLQMg3z/Sbs7127bJ1uLh2rymMuunDsDptT00sKObHedyBzvhFpcBG19w5qzXYvS3hDRYyhlQTVW6ILWDhSvsnNFC2gGwpt92358G48U8VoJPu5JYTY6NPZXScYlVIdMqKo0Iwi3nZxOnyuv/279FxrvlG7XnDgY8iZEuuUFOcAliS2wbJq7x5t/5AOF+lkWlXzHxVOls7m3LqSSYCEtJ24G7W1nfZ6LNqm19mdSPg==
+      - JWT_SECRET_EXPIRES=30d
+      - JWT_RESET=098krFptOvTDEPV8d31BDhasans1gAGIcoTz0O7Fw8d3cg2goyfeZrXPJtjL7eoc9Ht3WzOmWGVJtSzgQtlEUhITOAan2VfslqGS0a3eLQMg3z/Sbs7127bJ1uLh2rymMuunDsDptT00sKObHedyBzvhFpcBG19w5qzXYvS3hDRYyhlQTVW6ILWDhSvsnNFC2gGwpt92358G48U8VoJPu5JYTY6NPZXScYlVIdMqKo0Iwi3nZxOnyuv/279FxrvlG7XnDgY8iZEuuUFOcAliS2wbJq7x5t/5AOF+lkWlXzHxVOls7m3LqSSYCEtJ24G7W1nfZ6LNqm19mdSPg==
+      - JWT_RESET_EXPIRES=30d
+      - CLOUDINARY_NAME=dkulytwjq
+      - CLOUDINARY_API_KEY=291785548738463
+      - CLOUDINARY_API_SECRET=3ta_BQu-sq9l7E8FQSh3_g_wZLo
+      - STRIPE_API_SECRET_KEY=sk_test_51JUaENSFPqTjbRk3hm8PjhBNMPO9rcyegeGFGNJmkXkAuKik1CbxZw7we8NpYc3w2wInji156Ht9Fj7SOLdwe8kv00WfxzqZwM
+      - REDIS_HOST=redis-18125.c1.asia-northeast1-1.gce.cloud.redislabs.com
+      - REDIS_PORT=18125
+      - REDIS_PASS=o139OiJfVXVBKzKkRrVDfOr1aWSKkydx
