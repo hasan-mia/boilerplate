@@ -1,0 +1,14 @@
+{
+	"parser": "@typescript-eslint/parser",
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"prettier"
+	],
+	"plugins": ["@typescript-eslint", "prettier"],
+	"rules": {
+		"@typescript-eslint/explicit-module-boundary-types": "off", // Disable explicit return type for public functions
+		"@typescript-eslint/no-explicit-any": "off", // Allow usage of any type
+		"prettier/prettier": ["error", { "singleQuote": true, "semi": false }] // Prettier formatting rules
+	}
+}

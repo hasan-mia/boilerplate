@@ -3,7 +3,7 @@ version: '3'
 services:
   ens:
     build: ./
-    image: express_backend:latest
+    image: share_korbo_backend:latest
     ports:
       - 5007:5000
 

@@ -1,5 +1,5 @@
 # Use the official Node.js 18 slim image
-FROM node:18-slim
+FROM node:20-slim
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Start the Node.js application
-CMD ["node", "index.js"]
+CMD ["node", "index.ts"]

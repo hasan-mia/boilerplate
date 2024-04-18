@@ -1,0 +1,75 @@
+{
+	"name": "share-korbo-server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.ts",
+	"scripts": {
+		"test": "eslint .",
+		"start": "node index.ts",
+		"dev": "nodemon index.ts",
+		"lint": "eslint .",
+		"lint:fix": "eslint --fix .",
+		"prepare": "husky install"
+	},
+	"engines": {
+		"node": "20.x"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@types/express-fileupload": "^1.5.0",
+		"amqplib": "^0.10.4",
+		"bcryptjs": "^2.4.3",
+		"body-parser": "^1.20.2",
+		"class-transformer": "^0.5.1",
+		"class-validator": "^0.14.1",
+		"cloudinary": "^2.1.0",
+		"cookie-parser": "^1.4.6",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"express-async-handler": "^1.2.0",
+		"express-fileupload": "^1.5.0",
+		"firebase-admin": "^12.1.0",
+		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.3.2",
+		"morgan": "^1.10.0",
+		"multer": "1.4.5-lts.1",
+		"nodemailer": "^6.9.13",
+		"otp-generator": "^4.0.1",
+		"socket.io": "^4.7.5",
+		"validator": "^13.11.0"
+	},
+	"devDependencies": {
+		"@types/bcryptjs": "^2.4.6",
+		"@types/cookie-parser": "^1.4.7",
+		"@types/morgan": "^1.9.9",
+		"@types/node": "^20.12.7",
+		"@types/otp-generator": "^4.0.2",
+		"@typescript-eslint/eslint-plugin": "^7.7.0",
+		"@typescript-eslint/parser": "^7.7.0",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-prettier": "^5.1.3",
+		"husky": "^8.0.3",
+		"lint-staged": "^15.2.2",
+		"nodemon": "^3.1.0",
+		"prettier": "^3.2.5",
+		"ts-node": "^10.9.2",
+		"typescript": "^4.9.5"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged && npm test -- --bail=false"
+		}
+	},
+	"lint-staged": {
+		"**/*": "prettier --write --ignore-unknown",
+		"*.js": [
+			"eslint",
+			"git add"
+		]
+	}
+}
