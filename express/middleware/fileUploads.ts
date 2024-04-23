@@ -20,33 +20,17 @@ const fileUploads = async (req: Request, res: Response, next: NextFunction) => {
 				.json({ success: false, message: 'No files uploaded' })
 		}
 
-		const uploadedfiles: {
-			filename: string
-			type: string
-			public_id: string
-			url: string
-		}[] = []
+		const uploadedfiles: string[] = []
 		for (const file of fileList) {
 			if (file && file.name) {
 				const tempFilePath = `temp_${Date.now()}_${file.name}`
 				await file.mv(tempFilePath)
 
-				const uploadOptions: cloudinary.UploadApiOptions = {
-					folder: 'uploads',
+				const uploadedFile = await cloudinary.v2.uploader.upload(tempFilePath, {
+					folder: 'sharekorbo',
 					crop: 'scale',
-				}
-
-				const uploadedImage = await cloudinary.v2.uploader.upload(
-					tempFilePath,
-					uploadOptions,
-				)
-
-				uploadedfiles.push({
-					filename: file.name,
-					type: file.mimetype,
-					public_id: uploadedImage.public_id,
-					url: uploadedImage.secure_url,
 				})
+				uploadedfiles.push(uploadedFile.secure_url)
 
 				await fs.unlink(tempFilePath)
 			} else {

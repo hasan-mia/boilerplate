@@ -1,6 +1,7 @@
 node_modules
 build
 coverage
+.vscode/settings.json
 .DS_STORE
 
 tmp

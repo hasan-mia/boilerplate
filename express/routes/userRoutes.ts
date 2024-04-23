@@ -1,37 +1,24 @@
 import express from 'express'
 import {
 	deleteUser,
-	forgotPassword,
-	getUserDetails,
-	imageUpload,
-	loginUser,
-	logout,
-	registerUser,
-	resetPassword,
+	updateContactInfo,
 	updatePassword,
 	updateProfile,
+	userAll,
+	userInfoByID,
 } from '../controllers/userController'
-import { isAuthenticated, isAuthorizeRoles } from '../middleware/auth'
+import { isAuthenticated } from '../middleware/auth'
 
 const router = express.Router()
 
-router.route('/signup').post(registerUser)
-router.route('/signin').post(loginUser)
-
-router.route('/password/forgot').post(forgotPassword)
-router.route('/password/reset').put(resetPassword)
-
-router.route('/logout').get(logout)
-router.route('/me').get(isAuthenticated, getUserDetails)
-router.route('/password/update').put(isAuthenticated, updatePassword)
-router.route('/me/update').put(isAuthenticated, updateProfile)
-
+// update user
+router.route('/update-password').put(isAuthenticated, updatePassword)
+router.route('/update-profile').put(isAuthenticated, updateProfile)
+router.route('/update-contact').put(isAuthenticated, updateContactInfo)
+// get user
+router.route('/:id').get(userInfoByID)
+router.route('/all').get(isAuthenticated, userAll)
 // delete user
-router
-	.route('/me/update')
-	.delete(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
-
-// file upload
-router.route('/upload').post(imageUpload)
+router.route('/delete/:id').delete(isAuthenticated, deleteUser)
 
 export default router

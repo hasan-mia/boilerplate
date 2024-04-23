@@ -1,5 +1,5 @@
 {
-	"name": "share-korbo-server",
+	"name": "express",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.ts",
@@ -46,6 +46,7 @@
 		"@types/cookie-parser": "^1.4.7",
 		"@types/morgan": "^1.9.9",
 		"@types/node": "^20.12.7",
+		"@types/nodemailer": "^6.4.14",
 		"@types/otp-generator": "^4.0.2",
 		"@typescript-eslint/eslint-plugin": "^7.7.0",
 		"@typescript-eslint/parser": "^7.7.0",

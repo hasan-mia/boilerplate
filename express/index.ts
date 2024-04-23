@@ -21,7 +21,7 @@ connectDatabase()
 cloudinaryV2.config({
 	cloud_name: 'dxbdrkvwr',
 	api_key: '117564167476672',
-	api_secret: 'QYLYPnGFlsuDBSNBk3n7TbXjRKwH',
+	api_secret: 'QYLYPnGFlsuDBSNBk3n7TbXjRKw',
 })
 
 const server = app.listen(PORT, () => {

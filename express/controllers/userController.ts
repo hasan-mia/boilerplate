@@ -1,14 +1,8 @@
-import bcrypt from 'bcryptjs'
-import cloudinary from 'cloudinary'
 import { NextFunction, Request, Response } from 'express'
-import fs from 'fs/promises'
-import otpGenerator from 'otp-generator'
 import catchAsyncError from '../middleware/catchAsyncError'
-import User from '../models/userModel'
+import ContactModel from '../models/contactModel'
+import UserModel from '../models/userModel'
 import ErrorHandler from '../utils/errorhander'
-import sendToken from '../utils/generateJwtToken'
-
-import { UploadedFile } from 'express-fileupload'
 
 declare module 'express' {
 	interface Request {
@@ -16,172 +10,12 @@ declare module 'express' {
 	}
 }
 
-// Register a User
-export const registerUser = catchAsyncError(
-	async (req: Request, res: Response, next: NextFunction) => {
-		try {
-			const { name, email, password, role } = req.body
-
-			if (!name || !password) {
-				throw new ErrorHandler('Please provide a name and password', 400)
-			}
-
-			const existingUser = await User.findOne({ email })
-
-			if (existingUser) {
-				throw new ErrorHandler(`${email} is already registered`, 401)
-			}
-
-			// Hash password
-			const salt = await bcrypt.genSalt(10)
-			const hashedPassword = await bcrypt.hash(password, salt)
-
-			// Create new user
-			const createdUser = await User.create({
-				name,
-				email,
-				password: hashedPassword,
-				role,
-			})
-
-			// Prepare response payload
-			const responsePayload = {
-				id: createdUser._id,
-				role: createdUser.role,
-			}
-
-			// Send token in response
-			sendToken(responsePayload, 201, res)
-		} catch (error) {
-			// Handle any errors
-			next(error)
-		}
-	},
-)
-
-// Login User
-export const loginUser = catchAsyncError(
-	async (req: Request, res: Response, next: NextFunction) => {
-		try {
-			const { email, password } = req.body
-
-			if (!email || !password) {
-				throw new ErrorHandler('Please Enter Email & Password', 400)
-			}
-
-			const user = await User.findOne({ email }).select('+password')
-
-			if (!user || !(await user.comparePassword(password))) {
-				throw new ErrorHandler('Invalid Email & Password', 401)
-			}
-
-			// Prepare response payload
-			const responsePayload = {
-				id: user._id,
-				role: user.role,
-			}
-
-			sendToken(responsePayload, 200, res)
-		} catch (error) {
-			// Handle any errors
-			next(error)
-		}
-	},
-)
-
-// Logout
-export const logout = catchAsyncError(async (_, res: Response, next) => {
-	try {
-		res.clearCookie('token')
-		res.status(200).json({ success: true, message: 'Logged Out' })
-	} catch (error) {
-		// Handle any errors
-		next(error)
-	}
-})
-
-// Forgot password
-export const forgotPassword = catchAsyncError(
-	async (req: Request, res: Response, next: NextFunction) => {
-		try {
-			const { email } = req.body
-			const user = await User.findOne({ email }).select('status')
-
-			if (!user) {
-				throw new ErrorHandler('User not found', 404)
-			}
-
-			const otp = otpGenerator.generate(4, {
-				digits: true,
-				lowerCaseAlphabets: false,
-				upperCaseAlphabets: false,
-				specialChars: false,
-			})
-
-			user.otp = parseInt(otp)
-			user.otpVerified = false
-			await user.save()
-
-			res
-				.status(200)
-				.json({ success: true, message: 'OTP sent successfully', otp })
-		} catch (error) {
-			// Handle any errors
-			next(error)
-		}
-	},
-)
-
-// Reset password
-export const resetPassword = catchAsyncError(
-	async (req: Request, res: Response, next: NextFunction) => {
-		try {
-			const { otp, email, password } = req.body
-			const user = await User.findOne({ email }).select('+password')
-
-			if (!user || (otp !== '1234' && user.otp !== otp)) {
-				throw new ErrorHandler("OTP doesn't match", 401)
-			}
-
-			const salt = await bcrypt.genSalt(10)
-			const newPassword = await bcrypt.hash(password, salt)
-
-			user.password = newPassword
-			await user.save()
-
-			return res.json({
-				success: true,
-				message: 'Password updated successfully',
-			})
-		} catch (error) {
-			// Handle any errors
-			next(error)
-		}
-	},
-)
-
-// Get User Details
-export const getUserDetails = catchAsyncError(
-	async (req: Request, res: Response, next: NextFunction) => {
-		try {
-			const user = await User.findById(req.user.id)
-				.populate('parent', 'name email')
-				.populate('children', 'name email')
-
-			res.status(200).json({ success: true, user })
-		} catch (error) {
-			// Handle any errors
-			next(error)
-		}
-	},
-)
-
 // Update password
 export const updatePassword = catchAsyncError(
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			// Retrieve the user by ID
-			const user = await User.findById(req.user.id).select('+password')
+			const user = await UserModel.findById(req.user.id).select('+password')
 
 			// Check if user exists
 			if (!user) {
@@ -189,18 +23,18 @@ export const updatePassword = catchAsyncError(
 			}
 
 			// Compare old password
-			const isPasswordMatched = await user.comparePassword(req.body.oldPassword)
+			const isPasswordMatched = await user.comparePassword(req.body.oldPass)
 
 			if (!isPasswordMatched) {
-				throw new ErrorHandler('Old Password is incorrect', 400)
+				throw new ErrorHandler('Old Password is incorrect', 401)
 			}
 
-			if (req.body.newPassword !== req.body.confirmPassword) {
-				throw new ErrorHandler("Password doesn't match", 400)
+			if (req.body.newPass !== req.body.confirmPass) {
+				throw new ErrorHandler("Password doesn't match", 401)
 			}
 
 			// Update password
-			user.password = req.body.newPassword
+			user.password = req.body.newPass
 			await user.save()
 
 			return res.json({
@@ -208,46 +42,42 @@ export const updatePassword = catchAsyncError(
 				message: 'Password updated successfully',
 			})
 		} catch (error) {
-			// Handle any errors
 			next(error)
 		}
 	},
 )
 
 // Update User Profile
-export const updateProfile = async (req: Request, res: Response) => {
+export const updateProfile = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const userId = req.user.id
 		const newUserData = req.body
+		const { username } = req.body
 
-		if (req.files && req.files.avatar) {
-			const avatarFile = req.files.avatar as UploadedFile
-			const uploadedAvatar = await cloudinary.v2.uploader.upload(
-				avatarFile.tempFilePath,
-				{
-					folder: 'avatars',
-					width: 150,
-					crop: 'scale',
-				},
-			)
+		const existingUserData = await UserModel.findById(userId)
 
-			newUserData.avatar = {
-				public_id: uploadedAvatar.public_id,
-				url: uploadedAvatar.secure_url,
-			}
-
-			await fs.unlink(avatarFile.tempFilePath)
+		if (!existingUserData) {
+			throw new ErrorHandler('User not found', 404)
 		}
 
-		const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
-			new: true,
-			runValidators: true,
-			useFindAndModify: false,
-		})
+		if (username) {
+			const existingUserData = await UserModel.findOne({ username })
+			if (existingUserData) {
+				throw new ErrorHandler('username already used', 404)
+			}
+		}
 
-		res.status(200).json({ success: true, user })
+		const updatedUserData = { ...existingUserData.toObject(), ...newUserData }
+
+		await UserModel.findByIdAndUpdate(userId, updatedUserData)
+
+		res.status(200).json({ success: true, data: updatedUserData })
 	} catch (error) {
-		console.error(error)
-		res.status(500).json({ success: false, message: 'Internal Server Error' })
+		next(error)
 	}
 }
 
@@ -255,34 +85,90 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const deleteUser = catchAsyncError(
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const user = await User.findById(req.params.id)
+			const userId = req.params.id
+			const user = await UserModel.findOneAndDelete({ _id: userId })
 
 			if (!user) {
 				throw new ErrorHandler(
 					`User doesn't exist with Id: ${req.params.id}`,
-					400,
+					401,
 				)
 			}
 
-			await user.deleteOne()
-			res
-				.status(200)
-				.json({ success: true, message: 'User Deleted Successfully' })
+			res.status(200).json({ success: true, message: 'Deleted successfully' })
 		} catch (error) {
-			// Handle any errors
 			next(error)
 		}
 	},
 )
 
-// Image Upload
-export const imageUpload = catchAsyncError(
+// Get User Info by ID
+export const userInfoByID = catchAsyncError(
 	async (req: Request, res: Response, next: NextFunction) => {
+		const userId = req.params.id
 		try {
-			// Your image upload logic here
+			const user = await UserModel.findById(userId).populate('contact').exec()
+			if (!user) {
+				throw new ErrorHandler('User not found', 404)
+			}
+			res.status(200).json({ success: true, data: user })
 		} catch (error) {
-			// Handle any errors
 			next(error)
 		}
 	},
 )
+
+// Get All User
+export const userAll = catchAsyncError(
+	async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const user = await UserModel.find({}).populate('contact').exec()
+			if (!user) {
+				throw new ErrorHandler('User not found', 404)
+			}
+			res.status(200).json({ success: true, data: user })
+		} catch (error) {
+			next(error)
+		}
+	},
+)
+
+// Update User Contact Info
+export const updateContactInfo = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const userId = req.user.id
+		const newContactData = req.body
+
+		// Find the existing user
+		const existingUser = await UserModel.findById(userId).exec()
+		if (!existingUser) {
+			throw new ErrorHandler('User not found', 404)
+		}
+
+		// Update the contact information
+		const filter = { user: userId }
+		const options = { upsert: true, new: true, setDefaultsOnInsert: true }
+		const updatedContactData = await ContactModel.findOneAndUpdate(
+			filter,
+			newContactData,
+			options,
+		)
+
+		if (!updatedContactData) {
+			throw new ErrorHandler('Faild to update', 500)
+		}
+
+		// Update the user's contact reference
+		existingUser.contact = updatedContactData._id
+		await existingUser.save()
+
+		// Send the response
+		res.status(200).json({ success: true, data: updatedContactData })
+	} catch (error) {
+		next(error)
+	}
+}

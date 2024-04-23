@@ -1,140 +1,125 @@
 import bcrypt from 'bcryptjs'
-import { isEmail } from 'class-validator'
+import { isEmail, isMobilePhone } from 'class-validator'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import mongoose, { Document, Model, Schema } from 'mongoose'
+import mongoose, { Model, Schema } from 'mongoose'
 import { JWT_SECRET } from '../constant'
+import { Gender, IdCardVerificationStatus, Role, User } from '../types/user'
 
-enum Role {
-	SUPER_ADMIN = 'super_admin',
-	ADMIN = 'admin',
-	USER = 'user',
-}
-enum Gender {
-	Male = 'male',
-	Female = 'female',
-	NotSay = 'not_say',
-}
-
-enum IdCardVerificationStatus {
-	Pending = 'pending',
-	Approved = 'approved',
-	Rejected = 'rejected',
-}
-
-interface User extends Document {
-	first_name: string
-	last_name: string
-	email: string
-	username?: Date
-	mobile?: string | null
-	password: string
-	avatar?: string
-	birth_date?: string
-	role: Role
-	id_card_verification_status: IdCardVerificationStatus
-	parent?: mongoose.Schema.Types.ObjectId
-	children?: mongoose.Schema.Types.ObjectId[]
-	status: string
-	gender: Gender
-	isVerified: boolean
-	otp?: number
-	fcmtoken?: string
-	createdAt: Date
-	resetPasswordToken?: string
-	resetPasswordExpire?: Date
-	otpVerified?: boolean
-
-	getJWTToken(): string
-	comparePassword(enteredPassword: string): Promise<boolean>
-	getResetPasswordToken(): string
-}
-
-const UserSchema: Schema<User> = new Schema({
-	first_name: {
-		type: String,
-		required: true,
-	},
-	last_name: {
-		type: String,
-		required: true,
-	},
-	email: {
-		type: String,
-		required: true,
-		unique: true,
-		validate: {
-			validator: (value: string) => isEmail(value),
-			message: 'Please enter a valid email',
+const UserSchema: Schema<User> = new Schema(
+	{
+		firstName: {
+			type: String,
+			required: true,
 		},
-	},
-	username: {
-		type: String,
-		required: true,
-		unique: true,
-	},
-	mobile: {
-		type: String,
-		default: null,
-	},
-	password: {
-		type: String,
-		required: true,
-		minLength: 6,
-		select: false,
-	},
-	avatar: {
-		type: String,
-		default: '',
-	},
-	birth_date: {
-		type: Date,
-		default: '',
-	},
-	role: {
-		type: String,
-		default: Role.USER,
-		enum: Object.values(Role),
-	},
-	gender: {
-		type: String,
-		default: Gender.NotSay,
-		enum: Object.values(Gender),
-	},
-	id_card_verification_status: {
-		type: String,
-		default: IdCardVerificationStatus.Pending,
-		enum: Object.values(IdCardVerificationStatus),
-	},
-	parent: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User',
-		default: null,
-	},
-	children: [
-		{
+		lastName: {
+			type: String,
+			required: true,
+		},
+		email: {
+			type: String,
+			required: true,
+			unique: true,
+			validate: {
+				validator: (value: string) => isEmail(value),
+				message: 'Please enter a valid email',
+			},
+		},
+		username: {
+			type: String,
+			required: false,
+			unique: true,
+		},
+		mobile: {
+			type: String,
+			required: false,
+			unique: true,
+			validate: {
+				validator: (value: string) => isMobilePhone(value),
+				message: 'Please enter a valid email',
+			},
+		},
+		password: {
+			type: String,
+			required: true,
+			minLength: 6,
+			select: false,
+		},
+		avatar: {
+			type: String,
+			default: '',
+		},
+		birthDate: {
+			type: Date,
+			default: '',
+		},
+		role: {
+			type: String,
+			default: Role.USER,
+			enum: Object.values(Role),
+		},
+		gender: {
+			type: String,
+			default: Gender.NotSay,
+			enum: Object.values(Gender),
+		},
+		language: {
+			type: String,
+			default: '',
+		},
+		idCardFront: {
+			type: String,
+			default: '',
+		},
+		idCardBack: {
+			type: String,
+			default: '',
+		},
+		idCardVerificationStatus: {
+			type: String,
+			default: IdCardVerificationStatus.Pending,
+			enum: Object.values(IdCardVerificationStatus),
+		},
+		fcmtoken: {
+			type: String,
+			default: '',
+		},
+		isVerified: {
+			type: Boolean,
+			default: false,
+		},
+		friends: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Friend',
+			},
+		],
+		followers: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Follower',
+			},
+		],
+		followings: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Following',
+			},
+		],
+		contact: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'User',
+			ref: 'Contact',
+			default: null,
 		},
-	],
-	fcmtoken: {
-		type: String,
-		default: '',
+		createdAt: {
+			type: Date,
+			default: Date.now,
+		},
+		resetPasswordToken: String,
+		resetPasswordExpire: Date,
 	},
-	isVerified: {
-		type: Boolean,
-		default: false,
-	},
-	otp: {
-		type: Number,
-	},
-	createdAt: {
-		type: Date,
-		default: Date.now,
-	},
-	resetPasswordToken: String,
-	resetPasswordExpire: Date,
-})
+	{ timestamps: true },
+)
 
 UserSchema.pre<User>('save', async function (next) {
 	try {
@@ -150,7 +135,7 @@ UserSchema.pre<User>('save', async function (next) {
 
 UserSchema.methods.getJWTToken = function (this: User) {
 	return jwt.sign({ id: this._id }, JWT_SECRET, {
-		expiresIn: process.env.JWT_EXPIRE || '5d',
+		expiresIn: process.env.JWT_EXPIRE || '365d',
 	})
 }
 
