@@ -6,6 +6,7 @@ const User = require('../models/userModel')
 const sendToken = require('../utils/generateJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 const catchAsyncError = require('../middleware/catchAsyncError.js')
+const ApiFeatures = require('../utils/apifeature.js')
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -193,6 +194,81 @@ exports.updatePassword = catchAsyncError(async (req, res, next) => {
     success: true,
     message: 'Password updated successfully',
   })
+})
+
+exports.getAllUser = catchAsyncError(async (req, res, next) => {
+  try {
+    const { keyword, country } = req.query;
+    let perPage;
+
+    if (req.query && typeof req.query.limit === 'string') {
+        perPage = parseInt(req.query.limit, 10);
+    }
+
+    // Construct the search criteria
+    const searchCriteria = {};
+    if (keyword) {
+        searchCriteria.keyword = keyword;
+    }
+    if (country) {
+        searchCriteria.country = country;
+    }
+
+    const count = await User.countDocuments(searchCriteria);
+
+    const apiFeature = new ApiFeatures(
+        User.find(searchCriteria).select('-__v -password').sort({ createdAt: -1 }),
+        req.query,
+    )
+    .search()
+    .filter();
+
+    if (perPage !== undefined) {
+        apiFeature.pagination(perPage);
+    }
+
+    const result = await apiFeature.query;
+    const limit = result.length;
+
+    const currentPage = req.query.page
+        ? parseInt(req.query.page, 10)
+        : 1;
+
+    let totalPages;
+
+    if (perPage !== undefined) {
+        totalPages = Math.ceil(count / perPage);
+    }
+
+    let nextPage;
+    let nextUrl;
+
+    if (perPage !== undefined && currentPage < totalPages) {
+        nextPage = currentPage + 1;
+        nextUrl = `${req.originalUrl.split('?')[0]}?limit=${perPage}&page=${nextPage}`;
+        if (keyword) {
+            nextUrl += `&keyword=${keyword}`;
+        }
+        if (country) {
+            nextUrl += `&country=${country}`;
+        }
+    }
+
+    res.status(200).json({
+        success: true,
+        data: result || [],
+        total: count,
+        perPage,
+        limit,
+        nextPage,
+        nextUrl,
+    });
+    }catch (error) {
+        console.log(error);
+        return next(
+          new ErrorHandler(`Internal server error`, 500),
+        )
+    }
 })
 
 //Update User Profile

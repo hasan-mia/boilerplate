@@ -10,6 +10,7 @@ const {
   updateProfile,
   imageUpload,
   deleteUser,
+  getAllUser,
 } = require('../controllers/userController')
 const {
   isAuthenticated,
@@ -28,6 +29,9 @@ router.route('/logout').get(logout)
 router.route('/me').get(isAuthenticated, getUserDetails)
 router.route('/password/update').put(isAuthenticated, updatePassword)
 router.route('/me/update').put(isAuthenticated, updateProfile)
+
+// get all user
+router.route('/users').get(getAllUser)
 
 // delete user
 router.route('/me/update').delete(isAuthenticated, isAuthorizeRoles('admin, super_admin'), deleteUser)

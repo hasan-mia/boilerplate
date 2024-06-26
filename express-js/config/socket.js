@@ -1,19 +1,28 @@
 const http = require('http');
 const socketIO = require('socket.io');
 
+let io;
+
 const connectSocket = (app) => {
   const server = http.createServer(app);
-  const io = socketIO(server);
+  io = socketIO(server);
 
   io.on('connection', (socket) => {
-    console.log('A user connected', socket);
+    console.log('A user connected', socket.id);
 
     socket.on('disconnect', () => {
-      console.log('User disconnected');
+      console.log('User disconnected', socket.id);
     });
   });
 
   return server;
 };
 
-module.exports = connectSocket;
+const getIO = () => {
+  if (!io) {
+    throw new Error('Socket.io not initialized!');
+  }
+  return io;
+};
+
+module.exports = { connectSocket, getIO };
